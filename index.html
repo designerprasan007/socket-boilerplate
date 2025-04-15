@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <!-- Metadata and page settings -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>ChatApp_Socket</title>
+    <!-- Bootstrap CSS for styling -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+</head>
+<body class="container pt-5 pb-5 border mt-5">
+    <!-- User details form: Enter name and room -->
+    <form id="form">
+        <div class="mb-3">
+          <label for="exampleInputEmail1" class="form-label">User Name</label>
+          <input type="text" class="form-control" id="name" aria-describedby="emailHelp">
+        </div>
+        <div class="mb-3">
+            <label for="exampleInputEmail1" class="form-label">Room name</label>
+            <input type="text" class="form-control" id="room" aria-describedby="emailHelp">
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+          </div>
+      </form>
+
+    <!-- Message box area, hidden by default -->
+    <div class="card mt-5" id="messageBoxCard" style="display: none;">
+        <div class="card-body">
+          <h5 class="card-title text-center">Message box</h5>
+            <!-- Messages will be displayed here -->
+            <div id="messageBox">
+            </div>
+            <!-- Message input and send button -->
+            <div id="messageForm" class="d-flex w-100">
+                <input class="w-100 form-control" id="messageData" placeholder="Type here!" />
+                <button type="button" id="sendMessage" class="btn btn-success">send</button>
+            </div>
+        </div>
+      </div>
+</body>
+<!-- jQuery for DOM manipulation -->
+<script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+</script>
+<!-- Socket.IO client library -->
+<script src="https://cdn.socket.io/4.8.1/socket.io.min.js" integrity="sha384-mkQ3/7FUtcGyoppY6bz/PORYoGqOl7/aSUMn2ymDOJcapfS6PHqxhRTMh1RR0Q6+" crossorigin="anonymous"></script>
+</script>
+<script>
+    // Connect to the Socket.IO server
+    const socket = io('http://localhost:5001/');
+
+    // Get references to DOM elements
+    const form = document.getElementById('form');
+    const name = document.getElementById('name');
+    const room = document.getElementById("room");
+    const messageForm = document.getElementById("sendMessage");
+    const messageData = document.getElementById("messageData");
+    const messageBoxCard = document.getElementById("messageBoxCard");
+    const box = document.getElementById("messageBox");
+
+
+    // Handle form submission (joining a room)
+    form.addEventListener('submit', function(e) {
+    e.preventDefault();
+    // Emit a 'join' event to the server with name and room
+    if (name.value && room.value) {
+        socket.emit('join', {name: name.value, room: room.value});
+        // Show the message box once the user joins
+        messageBoxCard.style = "display: block"
+    }
+
+    // Listen for incoming messages and display them in the message box
+    socket.on("message", (data) =>{
+        // Append the new message to the box
+        box.innerHTML += `<p class="border p-3"><b>${data.user}:</b> ${data.text}</p>`
+    })
+    });
+
+    // Handle send message button click
+    messageForm.addEventListener('click', function() {
+        // Emit the user's message to the server
+        socket.emit('sendMessage', messageData.value);
+        // Clear the message input field
+        messageData.value = ''
+    })
+</script>
+</html>

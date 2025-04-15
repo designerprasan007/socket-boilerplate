@@ -4,6 +4,7 @@ const socketio = require('socket.io');
 const http = require('http');
 const cors = require('cors');
 const PORT = process.env.PORT || 5001;
+var path = require("path");
 
 // Creating an Express application
 const app = express();
@@ -19,13 +20,17 @@ const server = http.createServer(app);
 // Attaching the socket.io to server
 const io = socketio(server);
 
+// Loading the index.html page on nodejs render
+app.get('/', function(request, response){
+    // Calling the static html page to render on browser
+    response.sendFile(path.join(__dirname + '/index.html'));
+});
+
 // Handling websocket connection
 io.on('connect', (socket) =>{
     console.log('connected', socket.id); // logging the connected socketId
     // On user join reading the data and storing it in users array
-    socket.on('join', (data) =>{
-        // Parsing the JSON data
-        const {room, name} = JSON.parse(data);
+    socket.on('join', ({name, room}) =>{
         // adding the users in internal variable
         const {error, user} = addUser({id: socket.id, name, room})
         if(error) return error;
